@@ -35,15 +35,18 @@ async def upload_file(file: UploadFile = File(...)):
 
     print(f"File saved to: {filepath}")
 
-    # ✅ You can also run your own script here if needed:
     ai_scan_result, analysis_result = get_results(filepath)
-
-    print(ai_scan_result)
-    ai_detected = ai_scan_result["ai_detected"]
-    ai_confidence = ai_scan_result["ai_confidence"]
 
     if isinstance(ai_scan_result, ValueError):
         raise HTTPException(status_code=400, detail=str(ai_scan_result))
+
+    ai_detected = ai_scan_result["ai_detected"]
+    ai_confidence = ai_scan_result["ai_confidence"]
+
+    explainer = ExplainabilityEngine()
+    brief_overview = explainer.explain_overall_analysis(analysis_result)
+
+    print(brief_overview)
 
     return {
         "status": "success",
@@ -53,6 +56,9 @@ async def upload_file(file: UploadFile = File(...)):
         "type": file_type,
         "ai_detected": ai_detected,
         "ai_confidence": ai_confidence,
+        "ai_scan_result": ai_scan_result,
+        "analysis_result": analysis_result,
+        "briefOverview": brief_overview,
     }
 
 
@@ -66,10 +72,10 @@ def get_results(file_path):
     analyzer = MediaAnalyzer()
     if file_type == "image":
         ai_scan_result = scan_image(file_path)
-        analysis_result = analyzer._analyze_image(file_path)
+        analysis_result = analyzer.analyze_image(file_path)
     elif file_type == "video":
         ai_scan_result = scan_video(file_path)
-        analysis_result = analyzer._analyze_video(file_path)
+        analysis_result = analyzer.analyze_video(file_path)
 
     return ai_scan_result, analysis_result
 

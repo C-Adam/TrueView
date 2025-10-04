@@ -31,7 +31,6 @@ def scan_image(img_path):
         data = resp.json()
         report = data["report"]
 
-        # Extract just the parts you want
         verdict = report["ai_generated"]["verdict"]
 
         ai_detected = report["ai_generated"]["ai"]["is_detected"]

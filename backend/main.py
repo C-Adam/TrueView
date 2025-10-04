@@ -21,7 +21,7 @@ async def main():
     file_type = detect_file_type(file_path)
 
     if file_type == "unknown":
-        raise ValueError("Unsupported file type")
+        return ValueError("Unsupported file type")
     
     ai_scan_result = None
 

@@ -53,45 +53,34 @@ const MetricBox = ({ metric }: { metric: MetricData }) => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'normal':
-        return 'text-green-400';
-      case 'suspicious_low':
-      case 'suspicious_high':
-        return 'text-red-400';
+      case "normal":
+        return "text-green-400";
+      case "suspicious_low":
+      case "suspicious_high":
+        return "text-red-400";
       default:
-        return 'text-yellow-400';
+        return "text-yellow-400";
     }
   };
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-lg border border-white/20 overflow-hidden">
-      <div 
-        className="p-6 cursor-pointer hover:bg-white/5 transition-colors"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+      <div className="p-6 cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsOpen(!isOpen)}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
-            <div className={`text-3xl font-bold ${getStatusColor(metric.status)}`}>
-              {typeof metric.actual_value === 'number' 
-                ? metric.actual_value.toFixed(2) 
-                : metric.actual_value}
-            </div>
+            <div className={`text-3xl font-bold ${getStatusColor(metric.status)}`}>{typeof metric.actual_value === "number" ? metric.actual_value.toFixed(2) : metric.actual_value}</div>
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-white">{metric.display_name}</h3>
               <p className="text-sm text-gray-400">Expected: {metric.expected_range}</p>
             </div>
           </div>
-          <div className="text-white text-xl">
-            {isOpen ? '▼' : '▶'}
-          </div>
+          <div className="text-white text-xl">{isOpen ? "▼" : "▶"}</div>
         </div>
       </div>
-      
+
       {isOpen && (
         <div className="px-6 pb-6 pt-2 border-t border-white/10">
-          <p className="text-sm text-gray-300 leading-relaxed">
-            {metric.analysis}
-          </p>
+          <p className="text-sm text-gray-300 leading-relaxed">{metric.analysis}</p>
         </div>
       )}
     </div>
@@ -121,7 +110,7 @@ const Dashboard = () => {
     | undefined;
 
   const fileUrl = state?.file?.path ? `http://localhost:8000${state.file.path}` : "";
-  const isVideo = state?.file?.type === 'video';
+  const isVideo = state?.file?.type === "video";
 
   const aiDetected = state?.file?.ai_detected ?? false;
   const aiConfidence = (state?.file?.ai_confidence ?? 0) * 100;
@@ -130,26 +119,27 @@ const Dashboard = () => {
 
   // ✅ Use briefOverview from backend if available
   const briefOverview = state?.file?.briefOverview || "";
-  
+
   // ✅ Get metric explanations from backend
   const metricExplanations = state?.file?.metricExplanations || [];
-  
+
   // Debug logging
   console.log("Dashboard received state:", state);
   console.log("Brief Overview:", briefOverview);
   console.log("Metric Explanations:", metricExplanations);
-  
+
   const reasoningPoints = briefOverview
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-    .map(line => {
-      return line.replace(/^[•\-\*]\s*/, '')  // Remove •, -, * bullets
-                 .replace(/^\d+\.\s*/, '')     // Remove numbered lists (1., 2., etc.)
-                 .replace(/^\*\*\d+\.\*\*\s*/, '') // Remove **1.** style
-                 .trim();
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => {
+      return line
+        .replace(/^[•\-\*]\s*/, "") // Remove •, -, * bullets
+        .replace(/^\d+\.\s*/, "") // Remove numbered lists (1., 2., etc.)
+        .replace(/^\*\*\d+\.\*\*\s*/, "") // Remove **1.** style
+        .trim();
     })
-    .filter(line => line.length > 0);
+    .filter((line) => line.length > 0);
 
   return (
     <div className="relative min-h-screen text-white overflow-hidden">
@@ -168,8 +158,9 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-2 mb-8">
-          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">TrueView Report</h1>
+        <div className="flex items-center gap-[2px] mb-8">
+          <img src="/logo.png" alt="TrueView Logo" className="w-[72px] h-[72px] object-contain align-middle" />
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent leading-none">TrueView Report</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -189,9 +180,7 @@ const Dashboard = () => {
           {/* RIGHT SIDE */}
           <div className="space-y-4">
             {metricExplanations.length > 0 ? (
-              metricExplanations.map((metric, index) => (
-                <MetricBox key={index} metric={metric} />
-              ))
+              metricExplanations.map((metric, index) => <MetricBox key={index} metric={metric} />)
             ) : (
               <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
                 <p className="text-gray-300">Loading metrics...</p>

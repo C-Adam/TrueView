@@ -19,7 +19,7 @@ class MediaAnalyzer:
         self.edge_continuity = 0
         self.metadata = {}
     
-    def _analyze_video(self, file_path):
+    def analyze_video(self, file_path):
         """
         Analyze a video file.
         
@@ -61,12 +61,12 @@ class MediaAnalyzer:
         
         cap.release()
         
-        self._calculate_motion_and_edges()
-        self._calculate_texture_variance()
+        self.calculate_motion_and_edges()
+        self.calculate_texture_variance()
         
-        return self._compile_results()
+        return self.compile_results()
     
-    def _analyze_image(self, file_path):
+    def analyze_image(self, file_path):
         """
         Analyze a single image file.
         
@@ -95,15 +95,15 @@ class MediaAnalyzer:
 
         self.motion_scores = []
         self.edge_consistency = []
-        self._calculate_texture_variance()
+        self.calculate_texture_variance()
         
-        self.edge_density = self._calculate_edge_density(gray)
-        self.color_variance = self._calculate_color_variance(image)
-        self.edge_continuity = self._calculate_edge_continuity(image)
+        self.edge_density = self.calculate_edge_density(gray)
+        self.color_variance = self.calculate_color_variance(image)
+        self.edge_continuity = self.calculate_edge_continuity(image)
         
-        return self._compile_results()
+        return self.compile_results()
     
-    def _calculate_motion_and_edges(self):
+    def calculate_motion_and_edges(self):
         self.motion_scores = []
         self.edge_consistency = []
         
@@ -117,29 +117,29 @@ class MediaAnalyzer:
             edge_diff = np.mean(cv2.absdiff(edges1, edges2))
             self.edge_consistency.append(edge_diff)
     
-    def _calculate_texture_variance(self):
+    def calculate_texture_variance(self):
         self.texture_variances = [
             np.var(cv2.Laplacian(frame, cv2.CV_64F)) 
             for frame in self.frames
         ]
     
-    def _calculate_edge_density(self, gray_image):
+    def calculate_edge_density(self, gray_image):
         edges = cv2.Canny(gray_image, 100, 200)
         edge_density = np.sum(edges > 0) / (edges.shape[0] * edges.shape[1])
         return edge_density
     
-    def _calculate_color_variance(self, color_image):
+    def calculate_color_variance(self, color_image):
         variances = [np.var(color_image[:, :, i]) for i in range(3)]
         return np.mean(variances)
     
-    def _calculate_edge_continuity(self, img):
+    def calculate_edge_continuity(self, img):
         edges = cv2.Canny(img, 100, 200)
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         avg_len = np.mean([len(c) for c in contours]) if contours else 0
         return avg_len
 
 
-    def _compile_results(self):
+    def compile_results(self):
         """
         Compile all analysis results into a dictionary.
         
@@ -180,9 +180,9 @@ class MediaAnalyzer:
         
         return results
 
-#if __name__ == "__main__":
-    # analyzer = MediaAnalyzer()
-    # result = analyzer._analyze_image('../media/ai_cow.png')
-    # result1 = analyzer._analyze_video('../media/lion_ai_video.mp4')
-    #print(result)
-    #print(result1)
+if __name__ == "__main__":
+    analyzer = MediaAnalyzer()
+    result = analyzer.analyze_image('../media/ai_cow.png')
+    result1 = analyzer.analyze_video('../media/lion_ai_video.mp4')
+    print(result)
+    print(result1)

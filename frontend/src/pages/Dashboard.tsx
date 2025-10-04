@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { AnalysisReasoning } from "@/components/AnalysisReasoning";
+import { useState } from "react";
 
 interface VerdictProps {
   label: string;
@@ -39,16 +40,60 @@ const AnalysisVerdict = ({ label, value, detected, type }: VerdictProps) => {
   );
 };
 
-const MetricBox = ({ label, value, description }: { label: string; value: number; description: string }) => {
+interface MetricData {
+  display_name: string;
+  actual_value: number;
+  expected_range: string;
+  analysis: string;
+  status: string;
+}
+
+const MetricBox = ({ metric }: { metric: MetricData }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'normal':
+        return 'text-green-400';
+      case 'suspicious_low':
+      case 'suspicious_high':
+        return 'text-red-400';
+      default:
+        return 'text-yellow-400';
+    }
+  };
+
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-4">
-          <div className="text-3xl font-bold text-purple-400">{value}</div>
-          <h3 className="text-lg font-semibold text-white">{label}</h3>
+    <div className="bg-white/10 backdrop-blur-lg rounded-lg border border-white/20 overflow-hidden">
+      <div 
+        className="p-6 cursor-pointer hover:bg-white/5 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <div className={`text-3xl font-bold ${getStatusColor(metric.status)}`}>
+              {typeof metric.actual_value === 'number' 
+                ? metric.actual_value.toFixed(2) 
+                : metric.actual_value}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white">{metric.display_name}</h3>
+              <p className="text-sm text-gray-400">Expected: {metric.expected_range}</p>
+            </div>
+          </div>
+          <div className="text-white text-xl">
+            {isOpen ? '▼' : '▶'}
+          </div>
         </div>
       </div>
-      <p className="text-sm text-gray-300 mt-2">{description}</p>
+      
+      {isOpen && (
+        <div className="px-6 pb-6 pt-2 border-t border-white/10">
+          <p className="text-sm text-gray-300 leading-relaxed">
+            {metric.analysis}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
@@ -67,6 +112,8 @@ const Dashboard = () => {
           type: string;
           ai_confidence: number;
           ai_detected: boolean;
+          briefOverview?: string;
+          metricExplanations?: MetricData[];
           deepfake_confidence: number;
           is_deepfake: boolean;
         };
@@ -74,37 +121,35 @@ const Dashboard = () => {
     | undefined;
 
   const fileUrl = state?.file?.path ? `http://localhost:8000${state.file.path}` : "";
-  const isVideo = /\.(mp4|mov|mkv)$/i.test(fileUrl);
+  const isVideo = state?.file?.type === 'video';
 
   const aiDetected = state?.file?.ai_detected ?? false;
   const aiConfidence = (state?.file?.ai_confidence ?? 0) * 100;
   const deepfakeDetected = state?.file?.is_deepfake ?? false;
   const deepfakeConfidence = (state?.file?.deepfake_confidence ?? 0) * 100;
 
-  const reasoningPoints = aiDetected ? ["High monotonicity score indicates artificial pixel patterns", "Radius diffusion analysis shows synthetic characteristics", "DALL-E or Flux generation artifacts detected", "Color distribution matches AI generation patterns"] : ["Low monotonicity score indicates natural pixel variation patterns", "Radius diffusion analysis shows organic edge characteristics", "No DALL-E or Flux generation artifacts detected", "Color distribution matches typical camera sensor output"];
-
-  const metricsData = [
-    {
-      label: "Monotonicity",
-      value: 9,
-      description: "Measures pixel uniformity and smoothness. Higher values indicate artificial generation patterns.",
-    },
-    {
-      label: "Radius Diffusion",
-      value: 4,
-      description: "Analyzes how light spreads. Natural images show irregular patterns; AI ones show uniform diffusion.",
-    },
-    {
-      label: "DALL-E Detection",
-      value: 3,
-      description: "Detects artifacts and composition markers typical of DALL-E images.",
-    },
-    {
-      label: "Flux Detection",
-      value: 2,
-      description: "Identifies visual blending and layer patterns unique to Flux-based models.",
-    },
-  ];
+  // ✅ Use briefOverview from backend if available
+  const briefOverview = state?.file?.briefOverview || "";
+  
+  // ✅ Get metric explanations from backend
+  const metricExplanations = state?.file?.metricExplanations || [];
+  
+  // Debug logging
+  console.log("Dashboard received state:", state);
+  console.log("Brief Overview:", briefOverview);
+  console.log("Metric Explanations:", metricExplanations);
+  
+  const reasoningPoints = briefOverview
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .map(line => {
+      return line.replace(/^[•\-\*]\s*/, '')  // Remove •, -, * bullets
+                 .replace(/^\d+\.\s*/, '')     // Remove numbered lists (1., 2., etc.)
+                 .replace(/^\*\*\d+\.\*\*\s*/, '') // Remove **1.** style
+                 .trim();
+    })
+    .filter(line => line.length > 0);
 
   return (
     <div className="relative min-h-screen text-white overflow-hidden">
@@ -124,10 +169,7 @@ const Dashboard = () => {
         </div>
 
         <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-            <span className="text-purple-400 font-bold">AI</span>
-          </div>
-          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">AI or Not Report</h1>
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">TrueView Report</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -146,9 +188,15 @@ const Dashboard = () => {
 
           {/* RIGHT SIDE */}
           <div className="space-y-4">
-            {metricsData.map((metric, index) => (
-              <MetricBox key={index} label={metric.label} value={metric.value} description={metric.description} />
-            ))}
+            {metricExplanations.length > 0 ? (
+              metricExplanations.map((metric, index) => (
+                <MetricBox key={index} metric={metric} />
+              ))
+            ) : (
+              <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
+                <p className="text-gray-300">Loading metrics...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

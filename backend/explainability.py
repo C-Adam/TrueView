@@ -278,8 +278,7 @@ Be concise and technical. Focus on the numbers."""
         else:
             status = 'normal'
         
-        # Build prompt for AI analysis
-        prompt = f"""You are an AI deepfake detection expert. Analyze this single metric from a video.
+         prompt = f"""You are an AI deepfake detection expert. Analyze this single metric from a video.
 
 **Metric:** {config['display_name']}
 **Description:** {config['description']}

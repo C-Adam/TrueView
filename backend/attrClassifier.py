@@ -180,8 +180,9 @@ class MediaAnalyzer:
         
         return results
 
-if __name__ == "__main__":
-    analyzer = MediaAnalyzer()
-    result = analyzer._analyze_image('media/Gemini_Generated_Image_nxkfcpnxkfcpnxkf.png')
-    result1 = analyzer._analyze_video('media/lion_ai_video.mp4')
-    print(result1)
+#if __name__ == "__main__":
+    # analyzer = MediaAnalyzer()
+    # result = analyzer._analyze_image('../media/ai_cow.png')
+    # result1 = analyzer._analyze_video('../media/lion_ai_video.mp4')
+    #print(result)
+    #print(result1)

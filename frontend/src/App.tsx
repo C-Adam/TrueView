@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // ✅ Import all pages you actually use
 import Upload from "./pages/Upload";
-import Results from "./pages/Results"; // Add this once you create the results page
 import Dashboard from "./pages/Dashboard"; // Make sure this file exists (frontend/src/pages/Dashboard.tsx)
 import NotFound from "./pages/NotFound";
 

@@ -1,44 +1,24 @@
-import { ImageViewer } from "@/components/ImageViewer";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AnalysisReasoning } from "@/components/AnalysisReasoning";
 
-const AnalysisVerdict = ({ isAIGenerated }: { isAIGenerated: boolean }) => {
+const AnalysisVerdict = ({ isAIGenerated, confidence }: { isAIGenerated: boolean; confidence: number }) => {
+  const confidencePercent = (confidence * 100).toFixed(1);
+
   return (
-    <div className="bg-card rounded-lg p-6 border border-border">
+    <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
       <div className="flex items-center gap-4">
         <div className="relative w-16 h-16">
           <svg className="transform -rotate-90 w-16 h-16">
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="none"
-              className="text-muted"
-            />
-            <circle
-              cx="32"
-              cy="32"
-              r="28"
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="none"
-              strokeDasharray={`${2 * Math.PI * 28}`}
-              strokeDashoffset={0}
-              className={isAIGenerated ? "text-red-500" : "text-green-500"}
-            />
+            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="8" fill="none" className="text-gray-600/40" />
+            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="8" fill="none" strokeDasharray={`${2 * Math.PI * 28}`} strokeDashoffset={0} className={isAIGenerated ? "text-red-500" : "text-green-500"} />
           </svg>
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`text-sm font-bold ${isAIGenerated ? "text-red-500" : "text-green-500"}`}>
-              {isAIGenerated ? "AI" : "✓"}
-            </span>
+            <span className={`text-sm font-bold ${isAIGenerated ? "text-red-500" : "text-green-500"}`}>{confidencePercent}%</span>
           </div>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground">Analysis</p>
-          <p className="text-2xl font-bold text-foreground">
-            {isAIGenerated ? "AI Generated" : "Not AI Generated"}
-          </p>
+          <p className="text-sm text-gray-300">Analysis</p>
+          <p className={`text-2xl font-bold ${isAIGenerated ? "text-red-500" : "text-green-500"}`}>{isAIGenerated ? "AI Generated" : "Not AI Generated"}</p>
         </div>
       </div>
     </div>
@@ -47,92 +27,107 @@ const AnalysisVerdict = ({ isAIGenerated }: { isAIGenerated: boolean }) => {
 
 const MetricBox = ({ label, value, description }: { label: string; value: number; description: string }) => {
   return (
-    <div className="bg-card rounded-lg p-6 border border-border">
+    <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-4">
-          <div className="text-3xl font-bold text-green-500">
-            {value}
-          </div>
-          <h3 className="text-lg font-semibold text-foreground">{label}</h3>
+          <div className="text-3xl font-bold text-purple-400">{value}</div>
+          <h3 className="text-lg font-semibold text-white">{label}</h3>
         </div>
       </div>
-      <p className="text-sm text-muted-foreground mt-2">{description}</p>
+      <p className="text-sm text-gray-300 mt-2">{description}</p>
     </div>
   );
 };
 
-const Index = () => {
-  // CHANGE THIS VALUE: Set to true for "AI Generated", false for "Not AI Generated"
-  const isAIGenerated = false;
-  
-  const reasoningPoints = isAIGenerated 
-    ? [
-        "High monotonicity score indicates artificial pixel patterns",
-        "Radius diffusion analysis shows synthetic characteristics",
-        "DALL-E or Flux generation artifacts detected",
-        "Color distribution matches AI generation patterns"
-      ]
-    : [
-        "Low monotonicity score indicates natural pixel variation patterns",
-        "Radius diffusion analysis shows organic edge characteristics",
-        "No DALL-E or Flux generation artifacts detected",
-        "Color distribution matches typical camera sensor output"
-      ];
+const Dashboard = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ Expect flat structure, not nested
+  const state = location.state as
+    | {
+        file: {
+          path: string;
+          filename: string;
+          size: number;
+          type: string;
+          ai_confidence: number;
+          ai_detected: boolean;
+        };
+      }
+    | undefined;
+
+  const fileUrl = state?.file?.path ? `http://localhost:8000${state.file.path}` : "";
+  const isVideo = /\.(mp4|mov|mkv)$/i.test(fileUrl);
+  const isAIGenerated = state?.file?.ai_detected ?? false;
+  const confidence = state?.file?.ai_confidence ?? 0;
+
+  const reasoningPoints = isAIGenerated ? ["High monotonicity score indicates artificial pixel patterns", "Radius diffusion analysis shows synthetic characteristics", "DALL-E or Flux generation artifacts detected", "Color distribution matches AI generation patterns"] : ["Low monotonicity score indicates natural pixel variation patterns", "Radius diffusion analysis shows organic edge characteristics", "No DALL-E or Flux generation artifacts detected", "Color distribution matches typical camera sensor output"];
 
   const metricsData = [
-    { 
-      label: "Monotonicity", 
-      value: 9, 
-      description: "Measures pixel uniformity and smoothness. Lower values suggest more natural variation typical of real images, while higher values may indicate artificial generation patterns."
+    {
+      label: "Monotonicity",
+      value: 9,
+      description: "Measures pixel uniformity and smoothness. Higher values indicate artificial generation patterns.",
     },
-    { 
-      label: "Radius Diffusion", 
-      value: 4, 
-      description: "Analyzes how light and colors spread from central points. Natural images show irregular diffusion patterns, while AI-generated images often display more uniform spreading."
+    {
+      label: "Radius Diffusion",
+      value: 4,
+      description: "Analyzes how light spreads. Natural images show irregular patterns; AI ones show uniform diffusion.",
     },
-    { 
-      label: "DALL-E Detection", 
-      value: 3, 
-      description: "Checks for specific artifacts and patterns characteristic of DALL-E generated images, including texture consistency and composition markers."
+    {
+      label: "DALL-E Detection",
+      value: 3,
+      description: "Detects artifacts and composition markers typical of DALL-E images.",
     },
-    { 
-      label: "Flux Detection", 
-      value: 2, 
-      description: "Identifies generation signatures specific to Flux models, analyzing layer blending and detail rendering patterns unique to this AI system."
-    }
+    {
+      label: "Flux Detection",
+      value: 2,
+      description: "Identifies visual blending and layer patterns unique to Flux-based models.",
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <span className="text-primary font-bold">AI</span>
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">AI or Not Report</h1>
+    <div className="relative min-h-screen text-white overflow-hidden">
+      {/* === Background Video === */}
+      <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover -z-20">
+        <source src="/background.mp4" type="video/mp4" />
+      </video>
+
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-black/70 -z-10"></div>
+
+      {/* === Content === */}
+      <div className="relative max-w-7xl mx-auto p-6 space-y-6">
+        {/* Back Button */}
+        <div className="flex justify-end">
+          <button onClick={() => navigate("/upload")} className="bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white px-5 py-2 rounded-lg font-semibold shadow-md hover:shadow-purple-400/30 transition">
+            ← Back to Upload
+          </button>
         </div>
 
-        {/* Main Analysis Section */}
+        {/* Header */}
+        <div className="flex items-center gap-2 mb-8">
+          <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+            <span className="text-purple-400 font-bold">AI</span>
+          </div>
+          <h1 className="text-3xl font-extrabold bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">AI or Not Report</h1>
+        </div>
+
+        {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          {/* Left Column: Image + Analysis */}
+          {/* Left Side */}
           <div className="space-y-4">
-            <ImageViewer 
-              imageUrl="https://images.unsplash.com/photo-1488590528505-98d2b5aba04b"
-            />
-            <AnalysisVerdict isAIGenerated={isAIGenerated} />
+            <div className="rounded-xl overflow-hidden backdrop-blur-lg bg-white/5 border border-white/10 shadow-lg">{isVideo ? <video src={fileUrl} controls className="w-full rounded-xl" /> : <img src={fileUrl} alt="Uploaded Media" className="w-full rounded-xl" />}</div>
+
+            <AnalysisVerdict isAIGenerated={isAIGenerated} confidence={confidence} />
             <AnalysisReasoning reasons={reasoningPoints} />
           </div>
 
-          {/* Right Column: Metrics */}
+          {/* Right Side */}
           <div className="space-y-4">
             {metricsData.map((metric, index) => (
-              <MetricBox 
-                key={index}
-                label={metric.label}
-                value={metric.value}
-                description={metric.description}
-              />
+              <MetricBox key={index} label={metric.label} value={metric.value} description={metric.description} />
             ))}
           </div>
         </div>
@@ -141,4 +136,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Dashboard;

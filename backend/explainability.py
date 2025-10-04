@@ -124,7 +124,7 @@ Focus on:
 3. Which patterns are most significant
 4. Confidence level in the assessment
 
-Keep the explanation conversational and accessible to non-technical users. Use 1 paragraph."""
+Make it into short bullet points, maximum bullet points = 5. ABSOLUTELY NO FORMATTING ANYWHERE"""
 
         return prompt
     
@@ -158,7 +158,7 @@ Focus on:
 3. Which visual characteristics are most telling
 4. Confidence level in the assessment
 
-Keep the explanation conversational and accessible to non-technical users. Use 1 paragraph."""
+Make it into short bullet points, maximum bullet points = 5. ABSOLUTELY NO FORMATTING ANYWHERE"""
 
         return prompt
     
@@ -183,7 +183,7 @@ Keep the explanation conversational and accessible to non-technical users. Use 1
 - Explain what the deviation means to someone non technical, make sure you use real world examples to explain terms. (e.g., "unusually low motion suggests synthetic frames")
 - Highlight the most suspicious metric(s)
 
-Be concise and technical. Focus on the numbers."""
+Be concise and technical. Focus on the numbers.ABSOLUTELY NO FORMATTING ANYWHERE"""
 
         return prompt
     
@@ -208,7 +208,7 @@ Be concise and technical. Focus on the numbers."""
 - Explain what the deviation means, to someone non technical, make sure you use real world examples to explain terms. (e.g., "low texture variance suggests over-smoothing typical of AI")
 - Highlight the most suspicious metric(s)
 
-Be concise and technical. Focus on the numbers."""
+Be concise and technical. Focus on the numbers.ABSOLUTELY NO FORMATTING ANYWHERE"""
 
         return prompt
     
@@ -291,7 +291,7 @@ Be concise and technical. Focus on the numbers."""
 2. Whether it suggests authenticity or AI generation
 3. Use real-world examples to explain (e.g., "like a camera held perfectly still" or "like natural hand shake")
 
-Be conversational and accessible to non-technical users."""
+Be concise, conversational and accessible to non-technical users. ABSOLUTELY NO FORMATTING ANYWHERE"""
 
         try:
             response = self.model.generate_content(prompt)
@@ -368,7 +368,6 @@ Be conversational and accessible to non-technical users."""
         else:
             status = 'normal'
         
-        # Build prompt for AI analysis
         prompt = f"""You are an AI deepfake detection expert. Analyze this single metric from an image.
 
 **Metric:** {config['display_name']}
@@ -382,7 +381,7 @@ Be conversational and accessible to non-technical users."""
 2. Whether it suggests authenticity or AI generation
 3. Use real-world examples to explain (e.g., "like an overly smooth skin texture" or "like natural photo grain")
 
-Be conversational and accessible to non-technical users."""
+Be concise, conversational and accessible to non-technical users. ABSOLUTELY NO FORMATTING ANYWHERE."""
 
         try:
             response = self.model.generate_content(prompt)

@@ -67,6 +67,8 @@ async def upload_file(file: UploadFile = File(...)):
     print(ai_scan_result)
     ai_detected = ai_scan_result["ai_detected"]
     ai_confidence = ai_scan_result["ai_confidence"]
+    is_deepfake = ai_scan_result["deepfake_detected"]
+    deepfake_confidence = ai_scan_result["deepfake_confidence"]
 
     if isinstance(ai_scan_result, ValueError):
         raise HTTPException(status_code=400, detail=str(ai_scan_result))
@@ -79,4 +81,6 @@ async def upload_file(file: UploadFile = File(...)):
         "type": file_type,
         "ai_detected": ai_detected,
         "ai_confidence": ai_confidence,
+        "is_deepfake": is_deepfake,
+        "deepfake_confidence": deepfake_confidence,
     }

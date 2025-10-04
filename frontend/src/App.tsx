@@ -3,10 +3,11 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import Auth from "./pages/Auth";
+
+// ✅ Import all pages you actually use
 import Upload from "./pages/Upload";
-import Home from "./pages/Home";
+import Results from "./pages/Results"; // Add this once you create the results page
+import Dashboard from "./pages/Dashboard"; // Make sure this file exists (frontend/src/pages/Dashboard.tsx)
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,11 +19,12 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* === Main Routes === */}
           <Route path="/" element={<Upload />} />
-
-          <Route path="/auth" element={<Auth />} />
           <Route path="/upload" element={<Upload />} />
-          <Route path="/home" element={<Home />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* === 404 Fallback === */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

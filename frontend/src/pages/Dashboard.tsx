@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { AnalysisReasoning } from "@/components/AnalysisReasoning";
+import { useState } from "react";
 
 const AnalysisVerdict = ({ isAIGenerated, confidence }: { isAIGenerated: boolean; confidence: number }) => {
   const confidencePercent = (confidence * 100).toFixed(1);
@@ -25,16 +26,60 @@ const AnalysisVerdict = ({ isAIGenerated, confidence }: { isAIGenerated: boolean
   );
 };
 
-const MetricBox = ({ label, value, description }: { label: string; value: number; description: string }) => {
+interface MetricData {
+  display_name: string;
+  actual_value: number;
+  expected_range: string;
+  analysis: string;
+  status: string;
+}
+
+const MetricBox = ({ metric }: { metric: MetricData }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'normal':
+        return 'text-green-400';
+      case 'suspicious_low':
+      case 'suspicious_high':
+        return 'text-red-400';
+      default:
+        return 'text-yellow-400';
+    }
+  };
+
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-4">
-          <div className="text-3xl font-bold text-purple-400">{value}</div>
-          <h3 className="text-lg font-semibold text-white">{label}</h3>
+    <div className="bg-white/10 backdrop-blur-lg rounded-lg border border-white/20 overflow-hidden">
+      <div 
+        className="p-6 cursor-pointer hover:bg-white/5 transition-colors"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4 flex-1">
+            <div className={`text-3xl font-bold ${getStatusColor(metric.status)}`}>
+              {typeof metric.actual_value === 'number' 
+                ? metric.actual_value.toFixed(2) 
+                : metric.actual_value}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-white">{metric.display_name}</h3>
+              <p className="text-sm text-gray-400">Expected: {metric.expected_range}</p>
+            </div>
+          </div>
+          <div className="text-white text-xl">
+            {isOpen ? '▼' : '▶'}
+          </div>
         </div>
       </div>
-      <p className="text-sm text-gray-300 mt-2">{description}</p>
+      
+      {isOpen && (
+        <div className="px-6 pb-6 pt-2 border-t border-white/10">
+          <p className="text-sm text-gray-300 leading-relaxed">
+            {metric.analysis}
+          </p>
+        </div>
+      )}
     </div>
   );
 };
@@ -54,21 +99,26 @@ const Dashboard = () => {
           ai_confidence: number;
           ai_detected: boolean;
           briefOverview?: string;
+          metricExplanations?: MetricData[];
         };
       }
     | undefined;
 
   const fileUrl = state?.file?.path ? `http://localhost:8000${state.file.path}` : "";
-  const isVideo = /\.(mp4|mov|mkv)$/i.test(fileUrl);
+  const isVideo = state?.file?.type === 'video';
   const isAIGenerated = state?.file?.ai_detected ?? false;
   const confidence = state?.file?.ai_confidence ?? 0;
 
-  // ✅ Use briefOverview from backend if available, otherwise use fallback
+  // ✅ Use briefOverview from backend if available
   const briefOverview = state?.file?.briefOverview || "";
+  
+  // ✅ Get metric explanations from backend
+  const metricExplanations = state?.file?.metricExplanations || [];
   
   // Debug logging
   console.log("Dashboard received state:", state);
   console.log("Brief Overview:", briefOverview);
+  console.log("Metric Explanations:", metricExplanations);
   
   const reasoningPoints = briefOverview
     .split('\n')
@@ -81,29 +131,6 @@ const Dashboard = () => {
                  .trim();
     })
     .filter(line => line.length > 0);
-
-  const metricsData = [
-    {
-      label: "Monotonicity",
-      value: 9,
-      description: "Measures pixel uniformity and smoothness. Higher values indicate artificial generation patterns.",
-    },
-    {
-      label: "Radius Diffusion",
-      value: 4,
-      description: "Analyzes how light spreads. Natural images show irregular patterns; AI ones show uniform diffusion.",
-    },
-    {
-      label: "DALL-E Detection",
-      value: 3,
-      description: "Detects artifacts and composition markers typical of DALL-E images.",
-    },
-    {
-      label: "Flux Detection",
-      value: 2,
-      description: "Identifies visual blending and layer patterns unique to Flux-based models.",
-    },
-  ];
 
   return (
     <div className="relative min-h-screen text-white overflow-hidden">
@@ -144,9 +171,15 @@ const Dashboard = () => {
 
           {/* Right Side */}
           <div className="space-y-4">
-            {metricsData.map((metric, index) => (
-              <MetricBox key={index} label={metric.label} value={metric.value} description={metric.description} />
-            ))}
+            {metricExplanations.length > 0 ? (
+              metricExplanations.map((metric, index) => (
+                <MetricBox key={index} metric={metric} />
+              ))
+            ) : (
+              <div className="bg-white/10 backdrop-blur-lg rounded-lg p-6 border border-white/20">
+                <p className="text-gray-300">Loading metrics...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>

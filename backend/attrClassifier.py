@@ -14,6 +14,9 @@ class MediaAnalyzer:
         self.motion_scores = []
         self.edge_consistency = []
         self.texture_variances = []
+        self.edge_density = 0
+        self.color_variance = 0
+        self.edge_continuity = 0
         self.metadata = {}
     
     def _analyze_video(self, file_path):
@@ -94,11 +97,11 @@ class MediaAnalyzer:
         self.edge_consistency = []
         self._calculate_texture_variance()
         
-        edge_density = self._calculate_edge_density(gray)
-        color_variance = self._calculate_color_variance(image)
-        edge_continuity = self.edge_continuity(image)
+        self.edge_density = self._calculate_edge_density(gray)
+        self.color_variance = self._calculate_color_variance(image)
+        self.edge_continuity = self._calculate_edge_continuity(image)
         
-        return self._compile_results(edge_density=edge_density, color_variance=color_variance)
+        return self._compile_results()
     
     def _calculate_motion_and_edges(self):
         self.motion_scores = []
@@ -129,43 +132,56 @@ class MediaAnalyzer:
         variances = [np.var(color_image[:, :, i]) for i in range(3)]
         return np.mean(variances)
     
-    def edge_continuity(img):
+    def _calculate_edge_continuity(self, img):
         edges = cv2.Canny(img, 100, 200)
         contours, _ = cv2.findContours(edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
         avg_len = np.mean([len(c) for c in contours]) if contours else 0
         return avg_len
 
 
-    def _compile_results(self, **kwargs):
+    def _compile_results(self):
         """
         Compile all analysis results into a dictionary.
         
         Returns:
             dict: Complete analysis results
         """
-        results = {
-            'metadata': self.metadata,
-            'metrics': {
-                'avg_motion': np.mean(self.motion_scores) if self.motion_scores else 0,
-                'avg_edge_consistency': np.mean(self.edge_consistency) if self.edge_consistency else 0,
-                'avg_texture_variance': np.mean(self.texture_variances) if self.texture_variances else 0,
-                'motion_std': np.std(self.motion_scores) if self.motion_scores else 0,
-                'edge_std': np.std(self.edge_consistency) if self.edge_consistency else 0,
-                'texture_std': np.std(self.texture_variances) if self.texture_variances else 0,
-            },
-            'raw_data': {
-                'motion_scores': self.motion_scores,
-                'edge_consistency': self.edge_consistency,
-                'texture_variances': self.texture_variances,
+        if self.metadata["type"] == 'video':
+            results = {
+                'metadata': self.metadata,
+                'metrics': {
+                    'avg_motion': np.mean(self.motion_scores) if self.motion_scores else 0,
+                    'avg_edge_consistency': np.mean(self.edge_consistency) if self.edge_consistency else 0,
+                    'avg_texture_variance': np.mean(self.texture_variances) if self.texture_variances else 0,
+                    'motion_std': np.std(self.motion_scores) if self.motion_scores else 0,
+                    'edge_std': np.std(self.edge_consistency) if self.edge_consistency else 0,
+                    'texture_std': np.std(self.texture_variances) if self.texture_variances else 0,
+                },
+                'raw_data': {
+                    'motion_scores': self.motion_scores,
+                    'edge_consistency': self.edge_consistency,
+                    'texture_variances': self.texture_variances,
+                }
             }
-        }
-        
-        results['metrics'].update(kwargs)
+        else:
+            results = {
+                'metadata': self.metadata,
+                'metrics': {
+                    'avg_texture_variance': np.mean(self.texture_variances) if self.texture_variances else 0,
+                    'texture_std': np.std(self.texture_variances) if self.texture_variances else 0,
+                    'edge_density': self.edge_density,
+                    'color_variance': self.color_variance,
+                    'edge_continuity': self.edge_continuity
+                },
+                'raw_data': {
+                    'texture_variances': self.texture_variances,
+                }
+            }
         
         return results
 
 if __name__ == "__main__":
     analyzer = MediaAnalyzer()
-
-    
-    pass
+    result = analyzer._analyze_image('media/Gemini_Generated_Image_nxkfcpnxkfcpnxkf.png')
+    result1 = analyzer._analyze_video('media/lion_ai_video.mp4')
+    print(result1)

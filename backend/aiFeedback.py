@@ -1,4 +1,0 @@
-import os
-
-class GeminiInterpreter():
-

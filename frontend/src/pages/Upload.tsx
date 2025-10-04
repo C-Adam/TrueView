@@ -34,7 +34,6 @@ export default function Upload() {
       const data = await response.json();
       console.log("Response data:", data);
 
-      // ✅ Redirect if successful
       if (data && !data.error && data.status !== "Unsupported or invalid file type") {
         navigate("/dashboard", { state: { file: data } });
       } else {

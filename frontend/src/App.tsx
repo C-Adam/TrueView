@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // ✅ Import all pages you actually use
 import Upload from "./pages/Upload";
-import Dashboard from "./pages/Dashboard"; // Make sure this file exists (frontend/src/pages/Dashboard.tsx)
+import Dashboard from "./pages/Dashboard"; 
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

@@ -48,6 +48,14 @@ async def upload_file(file: UploadFile = File(...)):
 
     print(brief_overview)
 
+    # Generate metric-specific explanations
+    metric_explanations = []
+    metrics = analysis_result['metrics']
+    
+    for metric_name in metrics.keys():
+        metric_data = explainer.explain_individual_metric(analysis_result, metric_name)
+        metric_explanations.append(metric_data)
+
     return {
         "status": "success",
         "filename": file.filename,
@@ -59,6 +67,7 @@ async def upload_file(file: UploadFile = File(...)):
         "ai_scan_result": ai_scan_result,
         "analysis_result": analysis_result,
         "briefOverview": brief_overview,
+        "metricExplanations": metric_explanations,
     }
 
 

@@ -39,9 +39,30 @@ async def upload_file(file: UploadFile = File(...)):
 
     if isinstance(ai_scan_result, ValueError):
         raise HTTPException(status_code=400, detail=str(ai_scan_result))
+    
+    print(ai_scan_result)
+    ai_detected = ai_scan_result["ai_detected"]
+    ai_confidence = ai_scan_result["ai_confidence"]
+    is_deepfake = ai_scan_result["deepfake_detected"]
+    deepfake_confidence = ai_scan_result["deepfake_confidence"]
+
+    explainer = ExplainabilityEngine()
+    brief_overview = explainer.explain_overall_analysis(analysis_result)
+
+    print(brief_overview)
+
+    # Generate metric-specific explanations
+    metric_explanations = []
+    metrics = analysis_result['metrics']
+    
+    for metric_name in metrics.keys():
+        metric_data = explainer.explain_individual_metric(analysis_result, metric_name)
+        metric_explanations.append(metric_data)
 
     ai_detected = ai_scan_result["ai_detected"]
     ai_confidence = ai_scan_result["ai_confidence"]
+    is_deepfake = ai_scan_result["deepfake_detected"]
+    deepfake_confidence = ai_scan_result["deepfake_confidence"]
 
     explainer = ExplainabilityEngine()
     brief_overview = explainer.explain_overall_analysis(analysis_result)
@@ -64,6 +85,8 @@ async def upload_file(file: UploadFile = File(...)):
         "type": file_type,
         "ai_detected": ai_detected,
         "ai_confidence": ai_confidence,
+        "is_deepfake": is_deepfake,
+        "deepfake_confidence": deepfake_confidence,
         "ai_scan_result": ai_scan_result,
         "analysis_result": analysis_result,
         "briefOverview": brief_overview,

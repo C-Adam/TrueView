@@ -1,5 +1,9 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from detector import scan_image, scan_video
+from attrClassifier import MediaAnalyzer
+from explainability import ExplainabilityEngine
+
 import shutil, os, subprocess, mimetypes
 
 app = FastAPI()
@@ -29,28 +33,41 @@ def detect_file_type(filename: str):
 async def upload_file(file: UploadFile = File(...)):
     filepath = os.path.join(UPLOAD_FOLDER, file.filename)
 
-    # ✅ Validate file type BEFORE saving
-    file_type = detect_file_type(file.filename)
-    if file_type == "unknown":
+    filetype = detect_file_type(file.filename)
+    if filetype == "unknown":
         raise HTTPException(status_code=400, detail="Unsupported file type")
 
-    # ✅ Save the uploaded file
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    print(f"✅ File saved to: {filepath}")
+    print(f"File saved to: {filepath}")
 
-    # ✅ Call your analysis script and pass the saved path
-    try:
-        subprocess.run(["python", "main.py", filepath], check=True)
-    except subprocess.CalledProcessError as e:
-        print("❌ Error running main.py:", e)
-        raise HTTPException(status_code=500, detail="Error analyzing file")
+    results = analyze_file(filepath, filetype)
 
     return {
         "status": "success",
         "filename": file.filename,
         "path": filepath,
         "size": os.path.getsize(filepath),
-        "type": file_type,
+        "type": filetype,
+        ""
     }
+
+@app.post("/analyze")
+def analyze_file(file_path: str, file_type):
+
+    explainer = ExplainabilityEngine()
+    
+    analyzer = MediaAnalyzer()
+
+    if file_type == "image":
+        ai_scan_result = scan_image(file_path)
+        analysis_result =  analyzer._analyze_image(file_path)
+        briefOverview =  explainer.explain_overall_analysis(analysis_result)
+    elif file_type == "video":
+        ai_scan_result = scan_video(file_path)
+        analysis_result =  analyzer._analyze_video(file_path)
+        briefOverview = explainer.explain_overall_analysis(analysis_result)
+
+        return ai_scan_result, analysis_result, briefOverview
+

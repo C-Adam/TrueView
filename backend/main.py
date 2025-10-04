@@ -12,7 +12,7 @@ def detect_file_type(path):
             return "video"
     return "unknown"
 
-async def main():
+def main():
     if len(sys.argv) < 2:
         print("No file provided")
         return
@@ -31,13 +31,12 @@ async def main():
 
     if file_type == "image":
         ai_scan_result = scan_image(file_path)
-        analysis_result = await analyzer._analyze_image(file_path)
-        briefOverview = await explainer.explain_overall_analysis(analysis_result)
-        metricSpecificOverview = await explainer.explain_specific_metrics()
+        analysis_result =  analyzer._analyze_image(file_path)
+        briefOverview =  explainer.explain_overall_analysis(analysis_result)
     elif file_type == "video":
         ai_scan_result = scan_video(file_path)
-        analysis_result = await analyzer._analyze_video(file_path)
-
+        analysis_result =  analyzer._analyze_video(file_path)
+        briefOverview = explainer.explain_overall_analysis(analysis_result)
 
     print("Result:", ai_scan_result)
     print("Analysis:", analysis_result)

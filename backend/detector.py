@@ -1,20 +1,11 @@
 from dotenv import load_dotenv
-import os, requests, json, mimetypes
+import os, requests
 
 load_dotenv()
 
 API_KEY = os.getenv("AIORNOT_API_KEY")  
 IMAGE_ENDPOINT = "https://api.aiornot.com/v2/image/sync"
 VIDEO_ENDPOINT = "https://api.aiornot.com/v2/video/sync"
-
-def detect_file_type(path):
-    mime_type, _ = mimetypes.guess_type(path)
-    if mime_type:
-        if mime_type.startswith("image"):
-            return "image"
-        elif mime_type.startswith("video"):
-            return "video"
-    return "unknown"
 
 def scan_image(img_path):
     with open(img_path, "rb") as image_file:
@@ -57,24 +48,12 @@ def scan_video(video_path):
         
         data = resp.json()
         report = data["report"]
-        return report
+        verdict = report["ai_generated"]["verdict"]
+        ai_detected = report["ai_generated"]["ai"]["is_detected"]
+        ai_confidence = report["ai_generated"]["ai"]["confidence"]
 
-def scan_file(path):
-    file_type = detect_file_type(path)
-    if file_type == "unknown":
-        raise ValueError("Unsupported file type")
-    
-    print(f"Detected file type: {file_type}")
-
-    result = None
-
-    try:
-        if file_type == "image":
-            result = scan_image(path)
-        elif file_type == "video":
-            result = scan_video(path)    
-    except Exception as e:
-        print(f"Error scanning file: {e}")
-        return e
-    
-    return result
+        return {
+            "verdict": verdict,
+            "ai_detected": ai_detected,
+            "ai_confidence": ai_confidence,
+        }

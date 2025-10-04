@@ -1,20 +1,11 @@
 from dotenv import load_dotenv
-import os, requests, json, mimetypes
+import os, requests
 
 load_dotenv()
 
 API_KEY = os.getenv("AIORNOT_API_KEY")  
 IMAGE_ENDPOINT = "https://api.aiornot.com/v2/image/sync"
 VIDEO_ENDPOINT = "https://api.aiornot.com/v2/video/sync"
-
-def detect_file_type(path):
-    mime_type, _ = mimetypes.guess_type(path)
-    if mime_type:
-        if mime_type.startswith("image"):
-            return "image"
-        elif mime_type.startswith("video"):
-            return "video"
-    return "unknown"
 
 def scan_image(img_path):
     with open(img_path, "rb") as image_file:
@@ -31,21 +22,16 @@ def scan_image(img_path):
         data = resp.json()
         report = data["report"]
 
-        # Extract just the parts you want
-        verdict = report["ai_generated"]["verdict"]
-
         ai_detected = report["ai_generated"]["ai"]["is_detected"]
         ai_confidence = report["ai_generated"]["ai"]["confidence"]
-
-        human_detected = report["ai_generated"]["human"]["is_detected"]
-        human_confidence = report["ai_generated"]["human"]["confidence"]
+        deepfake_detected = report["deepfake"]["is_detected"]
+        deepfake_confidence = report["deepfake"]["confidence"]
 
         return {
-            "verdict": verdict,
             "ai_detected": ai_detected,
             "ai_confidence": ai_confidence,
-            "human_detected": human_detected,
-            "human_confidence": human_confidence
+            "deepfake_detected": deepfake_detected,
+            "deepfake_confidence": deepfake_confidence,
         }
 
 def scan_video(video_path):
@@ -55,7 +41,8 @@ def scan_video(video_path):
             VIDEO_ENDPOINT,
             headers={"Authorization": f"Bearer {API_KEY}"},
             files=files,
-            timeout=120
+            timeout=120,
+            params={"only": ["ai_video", "deepfake_video"]},
         )
 
         if resp.status_code != 200:
@@ -63,26 +50,15 @@ def scan_video(video_path):
         
         data = resp.json()
         report = data["report"]
-        return report
 
-def scan_file(path):
-    file_type = detect_file_type(path)
-    if file_type == "unknown":
-        raise ValueError("Unsupported file type")
-    
-    print(f"Detected file type: {file_type}")
+        ai_detected = report["ai_video"]["is_detected"]
+        ai_confidence = report["ai_video"]["confidence"]
+        deep_fake_detected = report["deepfake_video"]["is_detected"] 
+        deep_fake_confidence = report["deepfake_video"]["confidence"]
 
-    result = None
-
-    try:
-        if file_type == "image":
-            result = scan_image(path)
-        elif file_type == "video":
-            result = scan_video(path)    
-    except Exception as e:
-        print(f"Error scanning file: {e}")
-        return e
-    
-    return result
-
-print("Result:", scan_file("../media/lion_ai_video.mp4"))
+        return {
+            "ai_detected": ai_detected,
+            "ai_confidence": ai_confidence,
+            "deepfake_detected": deep_fake_detected,
+            "deepfake_confidence": deep_fake_confidence,
+        }

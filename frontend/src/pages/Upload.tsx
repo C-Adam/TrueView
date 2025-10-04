@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 
 export default function Upload() {
   const [fileName, setFileName] = useState("");
+  const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   async function handleUpload(event: React.ChangeEvent<HTMLInputElement>) {
@@ -19,7 +20,8 @@ export default function Upload() {
         method: "POST",
         body: formData,
       });
-      // We are intentionally not setting result — no messages shown
+      const data = await response.json();
+      setResult(data);
     } catch (err) {
       console.error(err);
     } finally {

@@ -1,52 +1,42 @@
 import { Card } from "@/components/ui/card";
 
 interface AnalysisVerdictProps {
+  label: string;
   value: number;
-  type: "AI" | "Real";
+  type: "AI" | "Deepfake";
+  detected: boolean;
 }
 
-export const AnalysisVerdict = ({ value, type }: AnalysisVerdictProps) => {
-  const getColor = () => {
-    return type === "AI" ? "hsl(var(--fake-indicator))" : "hsl(var(--real-indicator))";
-  };
+export const AnalysisVerdict = ({ label, value, type, detected }: AnalysisVerdictProps) => {
+  // Pick colors dynamically
+  const color = detected ? "text-red-500" : "text-green-500";
+  const ringColor = detected ? "text-red-500" : "text-green-500";
+
+  // Dynamic status text logic
+  let statusText = "";
+  if (type === "AI") {
+    statusText = detected ? "Made by AI" : "Not Made by AI";
+  } else if (type === "Deepfake") {
+    statusText = detected ? "Deepfake Detected" : "Not a Deepfake";
+  }
 
   return (
-    <Card className="p-4 bg-[hsl(var(--metric-bg))] border-[hsl(var(--metric-border))]">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="relative w-16 h-16">
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                fill="none"
-                stroke="hsl(var(--border))"
-                strokeWidth="8"
-              />
-              <circle
-                cx="50"
-                cy="50"
-                r="40"
-                fill="none"
-                stroke={getColor()}
-                strokeWidth="8"
-                strokeDasharray={`${(value / 100) * 251.2} 251.2`}
-                strokeLinecap="round"
-                className="transition-all duration-1000 ease-out"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xl font-bold" style={{ color: getColor() }}>
-                {value}%
-              </span>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-foreground/60 mb-1">Analysis</h3>
-            <p className="text-lg font-bold text-foreground">{value}% {type}</p>
-          </div>
+    <Card className="p-4 bg-white/10 backdrop-blur-lg border border-white/20 flex items-center gap-4 w-full">
+      {/* Circular progress ring */}
+      <div className="relative w-16 h-16">
+        <svg className="transform -rotate-90 w-16 h-16">
+          <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="8" fill="none" className="text-gray-600/40" />
+          <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="8" fill="none" strokeDasharray={`${(value / 100) * 2 * Math.PI * 28} ${2 * Math.PI * 28}`} strokeLinecap="round" className={ringColor} />
+        </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={`text-sm font-bold ${color}`}>{value.toFixed(1)}%</span>
         </div>
+      </div>
+
+      {/* Text area */}
+      <div>
+        <p className="text-sm text-gray-300">{label}</p>
+        <p className={`text-2xl font-bold ${color}`}>{statusText}</p>
       </div>
     </Card>
   );

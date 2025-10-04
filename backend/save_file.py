@@ -15,4 +15,6 @@ async def upload_file(file: UploadFile = File(...)):
 
     return {"message": "File uploaded successfully", "path": filepath}
 
-subprocess.run(["python", "main.py"])
+
+print("working")
+# subprocess.run(["python", "main.py"])

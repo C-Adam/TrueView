@@ -66,6 +66,32 @@ class ExplainabilityEngine:
         except Exception as e:
             return f"Error generating metric explanation: {str(e)}"
     
+    def explain_individual_metric(self, results: Dict[str, Any], metric_name: str) -> Dict[str, Any]:
+        """
+        Provides analysis for a single specific metric.
+        
+        Args:
+            results (dict): Analysis results from MediaAnalyzer containing metadata, metrics, and raw_data
+            metric_name (str): Name of the metric to analyze (e.g., 'avg_motion', 'edge_density')
+            
+        Returns:
+            dict: {
+                'metric_name': str,
+                'display_name': str,
+                'actual_value': float,
+                'expected_range': str,
+                'analysis': str,
+                'status': str  # 'normal', 'suspicious_low', 'suspicious_high'
+            }
+        """
+        media_type = results['metadata']['type']
+        metrics = results['metrics']
+        
+        if media_type == 'video':
+            return self._analyze_video_metric(metrics, metric_name)
+        else:
+            return self._analyze_image_metric(metrics, metric_name)
+    
     def _build_video_overall_prompt(self, metadata: Dict[str, Any], metrics: Dict[str, Any]) -> str:
         prompt = f"""You are an AI deepfake detection expert explaining analysis results to a non-technical user.
 
@@ -185,6 +211,195 @@ Be concise and technical. Focus on the numbers."""
 Be concise and technical. Focus on the numbers."""
 
         return prompt
+    
+    def _analyze_video_metric(self, metrics: Dict[str, Any], metric_name: str) -> Dict[str, Any]:
+        """Analyze a single video metric and return structured data."""
+        
+        # Define metric configurations
+        metric_configs = {
+            'avg_motion': {
+                'display_name': 'Average Motion',
+                'expected_range': '10-50',
+                'low_threshold': 10,
+                'high_threshold': 50,
+                'description': 'Measures overall pixel intensity change between consecutive frames'
+            },
+            'motion_std': {
+                'display_name': 'Motion Standard Deviation',
+                'expected_range': '5-20',
+                'low_threshold': 5,
+                'high_threshold': 20,
+                'description': 'Captures how varied the motion is across the video sequence'
+            },
+            'avg_edge_consistency': {
+                'display_name': 'Average Edge Consistency',
+                'expected_range': '5-30',
+                'low_threshold': 5,
+                'high_threshold': 30,
+                'description': 'Measures how stable detected edges remain between frames'
+            },
+            'edge_std': {
+                'display_name': 'Edge Standard Deviation',
+                'expected_range': '2-15',
+                'low_threshold': 2,
+                'high_threshold': 15,
+                'description': 'Measures variation in edge consistency across frames'
+            },
+            'avg_texture_variance': {
+                'display_name': 'Average Texture Variance',
+                'expected_range': '100-10000',
+                'low_threshold': 100,
+                'high_threshold': 10000,
+                'description': 'Measures frame-to-frame variation in fine detail'
+            },
+            'texture_std': {
+                'display_name': 'Texture Standard Deviation',
+                'expected_range': '50-5000',
+                'low_threshold': 50,
+                'high_threshold': 5000,
+                'description': 'Measures variation in texture across frames'
+            }
+        }
+        
+        if metric_name not in metric_configs:
+            return {
+                'error': f"Unknown metric: {metric_name}",
+                'metric_name': metric_name
+            }
+        
+        config = metric_configs[metric_name]
+        actual_value = metrics.get(metric_name, 0)
+        
+        # Determine status
+        if actual_value < config['low_threshold']:
+            status = 'suspicious_low'
+        elif actual_value > config['high_threshold']:
+            status = 'suspicious_high'
+        else:
+            status = 'normal'
+        
+        # Build prompt for AI analysis
+        prompt = f"""You are an AI deepfake detection expert. Analyze this single metric from a video.
+
+**Metric:** {config['display_name']}
+**Description:** {config['description']}
+**Actual Value:** {actual_value:.2f}
+**Expected Range:** {config['expected_range']}
+**Status:** {'Within normal range' if status == 'normal' else 'Outside normal range'}
+
+**Task:** Provide a 2-3 sentence analysis explaining:
+1. What this specific value indicates about the video
+2. Whether it suggests authenticity or AI generation
+3. Use real-world examples to explain (e.g., "like a camera held perfectly still" or "like natural hand shake")
+
+Be conversational and accessible to non-technical users."""
+
+        try:
+            response = self.model.generate_content(prompt)
+            analysis = response.text
+        except Exception as e:
+            analysis = f"Error generating analysis: {str(e)}"
+        
+        return {
+            'metric_name': metric_name,
+            'display_name': config['display_name'],
+            'actual_value': actual_value,
+            'expected_range': config['expected_range'],
+            'description': config['description'],
+            'analysis': analysis,
+            'status': status
+        }
+    
+    def _analyze_image_metric(self, metrics: Dict[str, Any], metric_name: str) -> Dict[str, Any]:
+        """Analyze a single image metric and return structured data."""
+        
+        # Define metric configurations
+        metric_configs = {
+            'avg_texture_variance': {
+                'display_name': 'Texture Variance',
+                'expected_range': '250-600',
+                'low_threshold': 250,
+                'high_threshold': 600,
+                'description': 'Measures local variance of fine details (fur, grass, skin)'
+            },
+            'texture_std': {
+                'display_name': 'Texture Standard Deviation',
+                'expected_range': '100-10000',
+                'low_threshold': 100,
+                'high_threshold': 10000,
+                'description': 'Measures variation in texture across the image'
+            },
+            'edge_density': {
+                'display_name': 'Edge Density',
+                'expected_range': '0.03-0.10',
+                'low_threshold': 0.03,
+                'high_threshold': 0.10,
+                'description': 'Ratio of detected edges to total pixels'
+            },
+            'color_variance': {
+                'display_name': 'Color Variance',
+                'expected_range': '3000-8000',
+                'low_threshold': 3000,
+                'high_threshold': 8000,
+                'description': 'Measures diversity in color saturation and hue distribution'
+            },
+            'edge_continuity': {
+                'display_name': 'Edge Continuity',
+                'expected_range': '20-80',
+                'low_threshold': 20,
+                'high_threshold': 80,
+                'description': 'Average contour length across all detected edges'
+            }
+        }
+        
+        if metric_name not in metric_configs:
+            return {
+                'error': f"Unknown metric: {metric_name}",
+                'metric_name': metric_name
+            }
+        
+        config = metric_configs[metric_name]
+        actual_value = metrics.get(metric_name, 0)
+        
+        # Determine status
+        if actual_value < config['low_threshold']:
+            status = 'suspicious_low'
+        elif actual_value > config['high_threshold']:
+            status = 'suspicious_high'
+        else:
+            status = 'normal'
+        
+        # Build prompt for AI analysis
+        prompt = f"""You are an AI deepfake detection expert. Analyze this single metric from an image.
+
+**Metric:** {config['display_name']}
+**Description:** {config['description']}
+**Actual Value:** {actual_value:.4f}
+**Expected Range:** {config['expected_range']}
+**Status:** {'Within normal range' if status == 'normal' else 'Outside normal range'}
+
+**Task:** Provide a 2-3 sentence analysis explaining:
+1. What this specific value indicates about the image
+2. Whether it suggests authenticity or AI generation
+3. Use real-world examples to explain (e.g., "like an overly smooth skin texture" or "like natural photo grain")
+
+Be conversational and accessible to non-technical users."""
+
+        try:
+            response = self.model.generate_content(prompt)
+            analysis = response.text
+        except Exception as e:
+            analysis = f"Error generating analysis: {str(e)}"
+        
+        return {
+            'metric_name': metric_name,
+            'display_name': config['display_name'],
+            'actual_value': actual_value,
+            'expected_range': config['expected_range'],
+            'description': config['description'],
+            'analysis': analysis,
+            'status': status
+        }
 
 
 if __name__ == "__main__":
@@ -229,3 +444,32 @@ if __name__ == "__main__":
     print("=" * 80)
     metrics_image = explainer.explain_specific_metrics(image_results)
     print(metrics_image)
+    print("\n")
+    
+    # NEW: Individual metric analysis examples
+    print("=" * 80)
+    print("INDIVIDUAL METRIC ANALYSIS - VIDEO")
+    print("=" * 80)
+    
+    video_metrics_to_analyze = ['avg_motion', 'motion_std', 'avg_edge_consistency', 'avg_texture_variance']
+    for metric in video_metrics_to_analyze:
+        result = explainer.explain_individual_metric(video_results, metric)
+        print(f"\n📊 {result['display_name']}")
+        print(f"   Actual Value: {result['actual_value']:.2f}")
+        print(f"   Expected Range: {result['expected_range']}")
+        print(f"   Status: {result['status'].upper()}")
+        print(f"   Analysis: {result['analysis']}")
+    
+    print("\n")
+    print("=" * 80)
+    print("INDIVIDUAL METRIC ANALYSIS - IMAGE")
+    print("=" * 80)
+    
+    image_metrics_to_analyze = ['avg_texture_variance', 'edge_density', 'color_variance', 'edge_continuity']
+    for metric in image_metrics_to_analyze:
+        result = explainer.explain_individual_metric(image_results, metric)
+        print(f"\n📊 {result['display_name']}")
+        print(f"   Actual Value: {result['actual_value']:.4f}")
+        print(f"   Expected Range: {result['expected_range']}")
+        print(f"   Status: {result['status'].upper()}")
+        print(f"   Analysis: {result['analysis']}")

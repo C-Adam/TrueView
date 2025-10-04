@@ -22,15 +22,16 @@ def scan_image(img_path):
         data = resp.json()
         report = data["report"]
 
-        verdict = report["ai_generated"]["verdict"]
-
         ai_detected = report["ai_generated"]["ai"]["is_detected"]
         ai_confidence = report["ai_generated"]["ai"]["confidence"]
+        deepfake_detected = report["deepfake"]["is_detected"]
+        deepfake_confidence = report["deepfake"]["confidence"]
 
         return {
-            "verdict": verdict,
             "ai_detected": ai_detected,
             "ai_confidence": ai_confidence,
+            "deepfake_detected": deepfake_detected,
+            "deepfake_confidence": deepfake_confidence,
         }
 
 def scan_video(video_path):
@@ -40,7 +41,8 @@ def scan_video(video_path):
             VIDEO_ENDPOINT,
             headers={"Authorization": f"Bearer {API_KEY}"},
             files=files,
-            timeout=120
+            timeout=120,
+            params={"only": ["ai_video", "deepfake_video"]},
         )
 
         if resp.status_code != 200:
@@ -48,12 +50,15 @@ def scan_video(video_path):
         
         data = resp.json()
         report = data["report"]
-        verdict = report["ai_generated"]["verdict"]
-        ai_detected = report["ai_generated"]["ai"]["is_detected"]
-        ai_confidence = report["ai_generated"]["ai"]["confidence"]
+
+        ai_detected = report["ai_video"]["is_detected"]
+        ai_confidence = report["ai_video"]["confidence"]
+        deep_fake_detected = report["deepfake_video"]["is_detected"] 
+        deep_fake_confidence = report["deepfake_video"]["confidence"]
 
         return {
-            "verdict": verdict,
             "ai_detected": ai_detected,
             "ai_confidence": ai_confidence,
+            "deepfake_detected": deep_fake_detected,
+            "deepfake_confidence": deep_fake_confidence,
         }

@@ -53,6 +53,7 @@ const Dashboard = () => {
           type: string;
           ai_confidence: number;
           ai_detected: boolean;
+          briefOverview?: string;
         };
       }
     | undefined;
@@ -62,7 +63,24 @@ const Dashboard = () => {
   const isAIGenerated = state?.file?.ai_detected ?? false;
   const confidence = state?.file?.ai_confidence ?? 0;
 
-  const reasoningPoints = isAIGenerated ? ["High monotonicity score indicates artificial pixel patterns", "Radius diffusion analysis shows synthetic characteristics", "DALL-E or Flux generation artifacts detected", "Color distribution matches AI generation patterns"] : ["Low monotonicity score indicates natural pixel variation patterns", "Radius diffusion analysis shows organic edge characteristics", "No DALL-E or Flux generation artifacts detected", "Color distribution matches typical camera sensor output"];
+  // ✅ Use briefOverview from backend if available, otherwise use fallback
+  const briefOverview = state?.file?.briefOverview || "";
+  
+  // Debug logging
+  console.log("Dashboard received state:", state);
+  console.log("Brief Overview:", briefOverview);
+  
+  const reasoningPoints = briefOverview
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .map(line => {
+      return line.replace(/^[•\-\*]\s*/, '')  // Remove •, -, * bullets
+                 .replace(/^\d+\.\s*/, '')     // Remove numbered lists (1., 2., etc.)
+                 .replace(/^\*\*\d+\.\*\*\s*/, '') // Remove **1.** style
+                 .trim();
+    })
+    .filter(line => line.length > 0);
 
   const metricsData = [
     {

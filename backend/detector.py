@@ -79,5 +79,3 @@ def scan_file(path):
         return e
     
     return result
-
-print("Result:", scan_file("../media/lion_ai_video.mp4"))

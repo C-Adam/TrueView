@@ -1,9 +1,19 @@
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 import shutil, os, subprocess
 import os
 
 app = FastAPI()
-UPLOAD_FOLDER = "media"
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:8000"],  # frontend URL
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+UPLOAD_FOLDER = "../media"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 @app.post("/upload")
@@ -13,8 +23,8 @@ async def upload_file(file: UploadFile = File(...)):
     with open(filepath, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    return {"message": "File uploaded successfully", "path": filepath}
+    print("File saved to:", filepath)
+    subprocess.run(["python", "main.py", filepath])
+    return
 
 
-print("working")
-# subprocess.run(["python", "main.py"])

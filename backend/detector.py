@@ -37,15 +37,10 @@ def scan_image(img_path):
         ai_detected = report["ai_generated"]["ai"]["is_detected"]
         ai_confidence = report["ai_generated"]["ai"]["confidence"]
 
-        human_detected = report["ai_generated"]["human"]["is_detected"]
-        human_confidence = report["ai_generated"]["human"]["confidence"]
-
         return {
             "verdict": verdict,
             "ai_detected": ai_detected,
             "ai_confidence": ai_confidence,
-            "human_detected": human_detected,
-            "human_confidence": human_confidence
         }
 
 def scan_video(video_path):

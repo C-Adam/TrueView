@@ -2,6 +2,20 @@
 
 TrueView is a comprehensive web application designed to detect AI-generated images and videos, as well as identify deepfakes. Built during Hack Harvard 2025, this project addresses the growing challenge of distinguishing authentic media from synthetic content in an era where AI-generated imagery is becoming increasingly sophisticated.
 
+## Video Demo
+
+[Full Application Demo Video](./demo/trueview_demo.mp4)
+*Complete walkthrough of TrueView's features and capabilities*
+
+## Screenshots
+
+<img width="1467" height="833" alt="Screenshot 2025-10-04 at 8 06 39 PM" src="https://github.com/user-attachments/assets/cddcc459-cc21-4581-b4ea-b0b38f318d70" />
+
+<img width="1467" height="833" alt="Screenshot 2025-10-04 at 8 08 58 PM" src="https://github.com/user-attachments/assets/f1602172-f7b7-44a5-9062-ff2e69b3a780" />
+
+<img width="1467" height="833" alt="Screenshot 2025-10-04 at 8 10 36 PM" src="https://github.com/user-attachments/assets/89fb6b72-385b-426d-94ba-d4d294811257" />
+
+
 ## Table of Contents
 
 - [The Problem We're Solving](#the-problem-were-solving)
@@ -435,12 +449,6 @@ Retrieve uploaded media files (served as static files).
 ![Real Example 2](./media/real_people.jpeg)
 *Real photograph showing natural edge characteristics*
 
-
-### Video Demo
-
-[Full Application Demo Video](./demo/trueview_demo.mp4)
-*Complete walkthrough of TrueView's features and capabilities*
-
 ## Future Enhancements
 
 ### 1. Browser Extension
@@ -462,7 +470,7 @@ This project was built during Hack Harvard 2025 by a dedicated team passionate a
 
 **Team Members:**
 - Arav De - Backend Development, Computer Vision Analysis
-- Aryandeep Ray - Frontend Development, UI/UX Design
+- Aryadeep Ray - Frontend Development, UI/UX Design
 - Adam Cooper - API Integration, Performance Optimization
 - Galina Pokitko - Frontend Development, UI/UX Design
 

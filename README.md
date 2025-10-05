@@ -462,7 +462,7 @@ This project was built during Hack Harvard 2025 by a dedicated team passionate a
 
 **Team Members:**
 - Arav De - Backend Development, Computer Vision Analysis
-- Aryandeep Ray - Frontend Development, UI/UX Design
+- Aryadeep Ray - Frontend Development, UI/UX Design
 - Adam Cooper - API Integration, Performance Optimization
 - Galina Pokitko - Frontend Development, UI/UX Design
 

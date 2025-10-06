@@ -4,7 +4,7 @@ TrueView is a comprehensive web application designed to detect AI-generated imag
 
 ## Video Demo
 
-[Full Application Demo Video](./demo/trueview_demo.mp4)
+[[Full Application Demo Video]((https://youtu.be/e80UrStgrfc))]
 *Complete walkthrough of TrueView's features and capabilities*
 
 ## Screenshots
